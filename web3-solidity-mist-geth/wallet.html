@@ -22,7 +22,7 @@
             var input = "<table>";
 
             for (var i = 0; i < list.length; i++) {
-                var tempB = parseFloat(web3.fromWei(web3.eth.getBalance(list[i]), "ether"));
+                var tempB = parseFloat(web3.utils.fromWei(web3.eth.getBalance(list[i]), "ether"));
                 input += "<tr><td>" + list[i] + "</td><td>" + tempB + " ETHER</td></tr>";
                 total += tempB;
             }
