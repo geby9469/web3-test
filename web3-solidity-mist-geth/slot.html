@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <script type="text/javascript" src="./lib/bignumber.js"></script>
+    <script type="text/javascript" src="./lib/web3.min.js"></script>
+    <script type="text/javascript">
+
+        // current version: 1.7.1
+        // private netowrk: http://local-ip:geth_rpc-port
+        var web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8123'));
+        var contract = new web3.eth.Contract('smart contract interface [JSON RPC]', 'smart contract address');
+
+        // 이벤트를 감지
+        var event = vc.methods.sendResult();
+        event.watch(function(err, result) {
+            if(err) {
+                console.log(err);
+                return;
+            }
+
+            var amount = web3.fromWei(result.args.amount.toNumber(), "ether");
+            document.getElementById('first').innerHTML = result.args.n1.toNumber();
+            document.getElementById('second').innerHTML = result.args.n2.toNumber();
+            document.getElementById('third').innerHTML = result.args.n3.toNumber();
+            if (result.args.win) {
+                message('축하드립니다! ' + amount + 'ETHER를 얻었습니다.');
+            }
+            else
+                message('다음기회를 이용해주세요.');
+
+            refreshBalance();
+        });
+
+        function message($mes) {
+            document.getElementById('messages').innerHTML = $mes;
+        }
+
+        function refreshBalance() {
+            var address = document.getElementById('address').value;
+            document.getElementById('balance').innerHTML =
+            web3.fromWei(web3.eth.getBalance(address).toNumber(), "ether") + "ETHER";
+        }
+        
+        function spin() {
+            var address = document.getElementById('address').value;
+            var amount = web3.toWei(document.getElementById('bet_amount').value, "ether");
+            web3.eth.defaultAccount = address;
+        
+            if(web3.personal.unlockAccount(address, document.getElementById('pass').value)) {
+                contract.bet({value:amount, gas:2000000}, function(err, result) {
+                    if(!err) {
+                        message('결과를 기다리는 중입니다.');
+                    }
+                    else
+                        message(err);
+                });
+            }
+            message('wait... ');
+        }
+
+
+    </script>
+
+<style>
+    body {
+        text-align: center;
+        background-color: black;
+    }
+    input, select {
+        padding: 6px 10px;
+        margin: 4px 0;
+        display: inline-block;
+        border: 1px solid #3CBC8D;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+    input[type=button] {
+        border: none;
+        border-radius: 4px;
+        border: 1px solid #3CBC8D;
+        cursor: pointer;
+    }
+    input[type=button]:hover {
+        background-color: #45a049;
+    }
+    p, a {
+        color: #3CBC8D;
+        font-weight: 12px;
+    }
+    .title {
+        font-size: 50px;
+        text-align: center;
+    }
+    #machine {
+        text-align: center;
+    }
+</style>
+
+</head>
+
+<body>
+    <p class="title"> ETH Slots </p>
+    <p class="login">
+        ID:
+        <input type="text" id="address"
+        value=""0x6882345fgkaj423iote">
+        Pass:
+        <input type="password" id="pass" value="1234">
+        <input type="button" value="잔고확인" onclick="refreshBalance()">
+    </p>
+    <div id="machine">
+        <svg width="550" height="250" viewBox="0 0 1600 500">
+        <rect x="0" y="10" width="500" height="500" fill="black"
+        stroke="white" stroke-width="10">
+        </rect>
+        <rect x="550" y="10" width="500" height="500" fill="black"
+        stroke="white" stroke-width="10">
+        </rect>
+        <rect x="1100" y="10" width="500" height="500" fill="black"
+        stroke="white" stroke-width="10">
+        </rect>
+        <text x="100" y="415" font-family="courier" font-size="500"
+        fill="#3CBC8D" id="first"> 0 </text>
+        <text x="650" y="415" font-family="courier" font-size="500"
+        fill="#3CBC8D" id="second"> 0 </text>
+        <text x="1200" y="415" font-family="courier" font-size="500"
+        fill="#3CBC8D" id="third"> 0 </text>
+        </svg>
+    </div>
+
+    <p>
+        <select id="bet_amount">
+            <option> 0.2 </option>
+            <option> 0.4 </option>
+            <option> 0.6 </option>
+            <option> 0.8 </option>
+            <option> 1.0 </option>
+        </select>
+        <input type="button" value="Spin" onclick="spin()">
+    </p>
+    <p id="balance">0</p>
+    <p id="messages"></p>
+</body>
+</html>
