@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script type="text/javascript" src="./lib/bignumber.js"></script>
+    <script type="text/javascript" src="./lib/web3.min.js"></script>
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <link rel="stylesheet" href="https://fonts.googlepis.com/css?family=Roboto">
+    <link rel="stylesheet" href="https://fonts.googlepis.com/css?family=Lato">
+
+    <script type="text/javascript">
+        // ico html 디자인에 google font와 w3 css를 사용
+
+        // current version: 1.7.1
+        // private netowrk: websocket 사용하기 위해 geth --ws option 추가
+        var web3 = new Web3(new Web3.providers.WebsocketProvider('ws://localhost:8124'));
+        var contract = new web3.eth.Contract('smart contract interface [JSON RPC]', 'smart contract address');
+
+        var startTime = new Date(contract.getStart() * 1000);
+        var deadline = new Date(contract.getDeadline() * 1000);
+        var nowInBlockchain = new Date(contract.getNow() * 1000);
+
+        function invest() {
+            var amount = web3.toWei(document.getElementById('amount').value, "ether");
+            var address = document.getElementById('address').value;
+            web3.eth.defaultAccount = address;
+
+            if(web3.personal.unlockAccount(address, document.getElementById('pass').value)) {
+                contract.invest({value:amount, gas:2000000}, function(err, result) {
+                    if(!err) {
+                        message('구입이 완료되었습니다.')
+                    }
+                    else
+                        message(err);
+                });
+            }
+            message('wait... ');
+        }
+
+        function message($mes) {
+            document.getElementById('messages').innerHTML = $mes;
+        }
+
+        function init() {
+            resetGraph();
+            document.getElementById('salesStart').innerHTML = startTime;
+            document.getElementById('deadline').innerHTML = deadline;
+            document.getElementById('totalSaleVolume').innerHTML = contract.salesStatus() + "RT";
+            document.getElementById('toEther').innerHTML =  '(' + web3.fromWei(web3.eth.getBalance(contractAddress), "ether") + 'ETHER)';
+        }
+
+        function resetGraph() {
+            var bar = document.getElementById('progressBar');
+            var durationTime = contract.getDeadline() - contract.getStart();
+            var progress = contract.getNow() - contract.getStart();
+            var percent = Math.round(progress / durationTime * 100);
+
+            if(percent >= 100) {
+                bar.style.width = '100%';
+                bar.innerHTML = '판매가 종료되었습니다.';
+            }
+            else {
+                bar.style.width = percent + '%';
+                bar.innerHTML = percent + '%';
+            }
+        }
+
+        setInterval(function() { init(); }, 3000);
+    </script>
+
+<style>
+    body {
+        font-family: "Roboto";
+        letter-spacing: 7px;
+    }
+    .times {
+        letter-spacing: 0px;
+    }
+    .panel {
+        margin-top: 16px;
+        margin-bottom: 16;
+        text-align: center;
+        opacity: 0.6;
+    }
+    .panel2 {
+        margin-top: 16px;
+        margin-bottom: 16px;
+        float: right;
+        right: 20%;
+        position: relative;
+        text-align: center;
+        opacity: 0.72;
+        width: 60%;
+    }
+    input {
+        padding: 3px 4px;
+        margin: 4px 0;
+        display: inline-block;
+        border: 1px solid #3CBC8D;
+        border-radius: 4px;
+        box-sizing: border-box;
+        text-align: center;
+    }
+    input[type="number"] {
+        width: 100px;
+    }
+    select {
+        padding: 6px 10px;
+        margin: 4px 0;
+        display: inline-block;
+        border: 1px solid #3CBC8D;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+</style>
+
+<body>
+<header class="panel" sytle="padding:156px">
+    <h1>Rich Token</h1>
+    <h1>Initial Coin Offering</h1>
+</header>
+<div class="w3-row-padding w3-center w3-margin-top">
+    <div class="w3-half">
+        <div class="w3-card-2 w3-container" style="min-height:360px">
+        <h3>ICO 일정</h3><br>
+        <div class="w3-light-grey w3-round-large">
+            <div id="progressBar" class="w3-container w3-blue w3-round-large" style="width:25%">25%</div>
+        </div><br>
+        <h4>판매 시작:</h4>
+        <h5 class="times" id="salesStart">0</h5>
+        <h4>판매 종료:</h4>
+        <h5 class="times" id="deadline">0</h5>
+    </div>
+</div>
+<div class="w3-half">
+    <div class="w3-card-2 w3-conatiner" style="min-height:360px;
+    word-wrap:break-word; word-break:break-all;">
+        <h3> 총 RT 판매량</h3><br>
+        <h1 id="totalSaleVolume">0 RT</h1>
+        <p id="toEther">0 ETHER</p>
+    </div>
+</div>
+<header class="panel" sytle="padding:96px">
+    <h2>1 ETH = 1000000000000000000000 RT</h2>
+    <h1>부자가 된 기분을 느끼세요!</h1>
+    <h1>지금이 기회입니다.</h1>
+</header>
+<div class="w3-row-padding w3-center w3-margin-top">
+    <div class="panel2">
+        <div class="w3-card-2 w3-container" style="min-height:360px">
+            <h1>Rich Token 구입하기</h1>
+            <p class="login">
+                ID: <input type="text" id="address" value="account address">
+                Pass: <input type="password" id="pass" value="account password"><br><br>
+            <h3>투자할 ETH:<input type="number" id="amount" value="100"></h3>
+            <h4> <input type="button" value="구매" onClick="invest()"></h4>
+            <br>
+            <h4 id="messages"></h4>
+            </p>
+            </p>
+        </div>
+    </div>
+</div>
+<script>init();</script>
+</body>
+</html>
