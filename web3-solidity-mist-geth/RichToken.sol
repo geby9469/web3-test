@@ -11,17 +11,17 @@ contract RichToken {
 
     event Transfer(address from, address to, uint value);
 
-    function transfer(address _to, uint _value) {
+    function transfer(address _to, uint _value) public {
         address _from = msg.sender;
         require(_to != address(0)); //주소를 입력하지 않은 경우의 예외 처리
         require(balanceOf[_from] >= _value); //잔고가 부족한 경우의 예외 처리
 
         balanceOf[_from] -= _value;
         balanceOf[_to] += _value;
-        Transfer(_from, _to, _value);
+        emit Transfer(_from, _to, _value);
     }
 
-    function RichToken(address _icoAddress) {
+    function RichToken(address _icoAddress) public {
         owner = msg.sender;
         icoAddress = _icoAddress;
         ICO cs = ICO(icoAddress);
@@ -45,38 +45,45 @@ contract ICO {
     uint index;
     uint public constant exchangeRate = 1000;
     uint public salesStatus;
+    uint start;
     uint deadline;
 
-    function getIndex() constant returns(uint) {
+    function getIndex() public constant returns(uint) {
         return index;
     }
 
-    function getInvestor(uint i) constant returns(address) {
+    function getInvestor(uint i) public constant returns(address) {
         return investor[i];
     }
 
-    function getDeadline() constant returns(uint) {
+    function getDeadline() public constant returns(uint) {
         return deadline;
     }
 
-    function getNow() constant returns(uint) {
+    function getNow() public constant returns(uint) {
         return now;
     }
 
-    function getStart() constant returns(uint) {
+    function getStart() public constant returns(uint) {
         return start;
     }
 
-    function getTokens(address _investor) constant returns(uint) {
+    function getTokens(address _investor) public constant returns(uint) {
         return amountInvested[_investor] * exchangeRate;
     }
 
-    function ICO(uint salesMinutes) {
-        owner = msg.sender;
-        deadline = now + salesMinutes * 1 minutes;
+    function getSalesStatus() public constant returns(uint) {
+        return salesStatus;
     }
 
-    function invest() payable {
+    function ICO(uint salesMinutes) public {
+        owner = msg.sender;
+        deadline = now + salesMinutes * 1 minutes;
+        // add
+        start = now;
+    }
+
+    function invest() public payable {
         require(now < deadline);
 
         if(amountInvested[msg.sender] == 0) {
@@ -88,7 +95,7 @@ contract ICO {
         salesStatus += msg.value;
     }
 
-    function withdraw(uint amount) { // 판매가 끝나면 투자된 이더를 출금합니다.
+    function withdraw(uint amount) public { // 판매가 끝나면 투자된 이더를 출금합니다.
         if(now > deadline && msg.sender == owner) {
             msg.sender.transfer(amount);
         }
